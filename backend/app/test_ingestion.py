@@ -6,6 +6,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.ingestion.github import clone_repository
 from app.ingestion.repository import process_repository
+from app.embeddings.model import get_embedding_model
 
 
 if __name__ == "__main__":
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     )
 
     documents = process_repository(repo_path)
-    
+
     print("Source files processed successfully.")
 
     print(f"Total chunks: {len(documents)}")
@@ -25,3 +26,15 @@ if __name__ == "__main__":
         print(document.page_content[:300])
         print("METADATA:")
         print(document.metadata)
+
+    # Embedding test
+    print("\n--- EMBEDDING TEST ---")
+
+    embeddings = get_embedding_model()
+
+    text = documents[0].page_content
+
+    vector = embeddings.embed_query(text)
+
+    print(f"Vector dimensions: {len(vector)}")
+    print(f"First 10 values: {vector[:10]}")    
