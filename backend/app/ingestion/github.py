@@ -5,6 +5,7 @@ from git import Repo
 # Ensure backend root is in sys.path for module resolution
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from app.ingestion.chunker import chunk_file
 from app.ingestion.files import get_repository_files
 
 
@@ -34,7 +35,16 @@ if __name__ == "__main__":
 
     files = get_repository_files(path)
 
-    print(f"Found {len(files)} source files:")
+    print(f"Found {len(files)} source files")
 
-    for file in files[:20]:
-        print(file)
+    first_file = files[0]
+
+    documents = chunk_file(first_file)
+
+    print(f"\nFile: {first_file}")
+    print(f"Chunks: {len(documents)}")
+
+    for document in documents[:3]:
+        print("\n--- CHUNK ---")
+        print(document.page_content[:300])
+        print("METADATA:", document.metadata)
