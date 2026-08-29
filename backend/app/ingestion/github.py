@@ -1,5 +1,11 @@
+import sys
 from pathlib import Path
 from git import Repo
+
+# Ensure backend root is in sys.path for module resolution
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from app.ingestion.files import get_repository_files
 
 
 BASE_DIR = Path(__file__).resolve().parents[3]
@@ -26,4 +32,9 @@ if __name__ == "__main__":
         "requests"
     )
 
-    print(f"Repository cloned to: {path}")
+    files = get_repository_files(path)
+
+    print(f"Found {len(files)} source files:")
+
+    for file in files[:20]:
+        print(file)
