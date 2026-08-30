@@ -1,3 +1,4 @@
+import atexit
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from langchain_qdrant import QdrantVectorStore
@@ -8,6 +9,20 @@ from app.embeddings.model import get_embedding_model
 COLLECTION_NAME = "repo_code"
 
 _client: QdrantClient | None = None
+
+
+def close_qdrant_client() -> None:
+    """Closes the global Qdrant client cleanly before Python process shutdown."""
+    global _client
+    if _client is not None:
+        try:
+            _client.close()
+        except Exception:
+            pass
+        _client = None
+
+
+atexit.register(close_qdrant_client)
 
 
 def get_vector_store() -> QdrantVectorStore:

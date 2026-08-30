@@ -12,3 +12,4 @@ def get_retriever(k: int = 5) -> BaseRetriever:
             "k": k,
         },
     )
+    
