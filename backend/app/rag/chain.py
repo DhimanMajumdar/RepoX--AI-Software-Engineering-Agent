@@ -1,45 +1,51 @@
+from typing import cast
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
 
 from app.llm.groq import get_llm
 from app.retrieval.retriever import get_retriever
+from app.rag.schema import RepositoryAnswer
 
 
-PROMPT = ChatPromptTemplate.from_template(
-    """
-You are RepoX, an AI assistant that answers questions about GitHub repositories.
-
-Use ONLY the provided repository context to answer the question.
-
-If the answer cannot be determined from the context, say:
-"I couldn't find enough information in the repository context."
-
+PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            """You are RepoX, an expert AI software engineering assistant.
+Answer the user's question accurately using ONLY the provided repository context.
+If the answer cannot be determined from the context, say "I couldn't find enough information in the repository context."
 Do not invent code or behavior.
 
-Repository context:
+You MUST respond in JSON format with two keys:
+1. "answer": Detailed technical answer to the question.
+2. "sources": A JSON list of repository file path strings used to construct the answer (e.g. ["requests/api.py", "requests/sessions.py"]).""",
+        ),
+        (
+            "human",
+            """Repository context:
 {context}
 
 Question:
-{question}
-
-Answer:
-"""
+{question}""",
+        ),
+    ]
 )
 
 
-def ask_repository(question: str) -> str:
+def ask_repository(question: str) -> RepositoryAnswer:
     retriever = get_retriever(k=5)
 
     documents = retriever.invoke(question)
 
     context = "\n\n---\n\n".join(
-        document.page_content
-        for document in documents
+        f"File: {doc.metadata.get('file_path', 'Unknown')}\n{doc.page_content}"
+        for doc in documents
     )
 
     llm = get_llm()
 
-    chain = PROMPT | llm | StrOutputParser()
+    structured_llm = llm.with_structured_output(RepositoryAnswer, method="json_mode")
+
+    chain = PROMPT | structured_llm
 
     response = chain.invoke(
         {
@@ -48,4 +54,4 @@ def ask_repository(question: str) -> str:
         }
     )
 
-    return response
+    return cast(RepositoryAnswer, response)

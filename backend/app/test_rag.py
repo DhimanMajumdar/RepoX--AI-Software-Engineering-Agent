@@ -11,9 +11,12 @@ if __name__ == "__main__":
     question = "How does Requests handle HTTP requests?"
     print(f"Question: {question}\n")
     
-    try:
-        answer = ask_repository(question)
+    try:    
+        response = ask_repository(question)
         print("--- REPOX ANSWER ---")
-        print(answer)
+        print(response.answer)
+        print("\n--- SOURCES ---")
+        for source in response.sources:
+            print("-", source)
     except Exception as e:
         print(f"Error executing RAG chain: {e}")
