@@ -1,22 +1,25 @@
+import asyncio
 import sys
 from pathlib import Path
 
 # Add backend directory to sys.path for module resolution
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.rag.chain import ask_repository
+from app.rag.chain import astream_ask_repository
+
+
+async def main():
+    question = "How does Requests handle HTTP requests?"
+    print(f"Question: {question}\n")
+    print("--- REPOX ANSWER STREAM ---")
+    
+    try:
+        async for chunk in astream_ask_repository(question):
+            print(chunk, end="", flush=True)
+        print()
+    except Exception as e:
+        print(f"\nError executing RAG chain: {e}")
 
 
 if __name__ == "__main__":
-    question = "How does Requests handle HTTP requests?"
-    print(f"Question: {question}\n")
-    
-    try:    
-        response = ask_repository(question)
-        print("--- REPOX ANSWER ---")
-        print(response.answer)
-        print("\n--- SOURCES ---")
-        for source in response.sources:
-            print("-", source)
-    except Exception as e:
-        print(f"Error executing RAG chain: {e}")
+    asyncio.run(main())
